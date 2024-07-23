@@ -7,7 +7,7 @@ import Message from "./model/message.js"; // Assuming you have a Message model
 import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import TriviaQuestion from "./model/triviaquestion.js"
+
 
 const app = express();
 
