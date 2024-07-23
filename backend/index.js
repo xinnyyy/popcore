@@ -14,15 +14,14 @@ const express = require('express');
 const cors = require('cors');
 
 // Middleware for parsing JSON and urlencoded data
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// CORS middleware
-app.use(cors({
-  origin: 'https://popcore6436.vercel.app',
+const corsOptions = {
+  origin: 'https://popcore6436.vercel.app', // Your frontend URL
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true // Allow credentials
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 // Database connection
 connectDB();
 
