@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
   try {
-    const mongoURI = "mongodb://localhost:27017"; // MongoDB connection string
+    const mongoURI = "mongodb+srv://hoxinyi0505:<jQaKYYLWuhpYHg8y>@popcore.2awki7i.mongodb.net/?retryWrites=true&w=majority&appName=Popcore";
     await mongoose.connect(mongoURI, {
       useUnifiedTopology: true,
       useNewUrlParser: true,
