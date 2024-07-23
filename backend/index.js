@@ -281,7 +281,7 @@ app.get("/search", async (req, res) => {
 // Socket.IO event handling
 const server = createServer(app);
 const io = new Server(server, {
-  cors: {  origin: ["http://localhost:3000", "https://h-forum.vercel.app"],
+  cors: {  origin: ["http://localhost:3000", "https://popcore6436.vercel.app"],
   methods: ["GET", "POST"],
   credentials: true,
 }});
