@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toggle } from "../context/sidebarSlice";
-import Search from "../icons/Search";
 import Hamburger from "../icons/Hamburger";
 import Cancel from "../icons/Cancel";
 import Logout from "../icons/Logout";
@@ -17,66 +15,16 @@ const Navbar = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user"));
 
-  const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
 
-  const handleChange = (e) => {
-    setQuery(e.target.value);
-  };
-
-  const handleSearch = async () => {
-    if (query.trim()) {
-      const url = `${process.env.REACT_APP_BACKEND_URL.trim()}/search`;
-      console.log("Search URL:", url); // Log the constructed URL
-      try {
-        const encodedQuery = encodeURIComponent(query); // Encode the query parameter
-        const res = await axios.get(url, { params: { query: encodedQuery } });
-        setResults(res.data);
-      } catch (error) {
-        if (error.response) {
-          console.error("Server responded with a status other than 2xx:", error.response.data);
-        } else if (error.request) {
-          console.error("No response received:", error.request);
-        } else {
-          console.error("Error setting up the request:", error.message);
-        }
-      }
-    }
-  };
-  
-
   return (
-    <div
-      className="fixed bg-white dark:bg-[#1E212A]
-     top-0 left-0 right-0 z-10 h-14  shadow-md  flex items-center justify-between
-     px-4
-     md:px-20"
-    >
+    <div className="fixed bg-white dark:bg-[#1E212A] top-0 left-0 right-0 z-10 h-14 shadow-md flex items-center justify-between px-4 md:px-20" data-testid="navbar-component">
       <div className="text-sm md:text-base font-bold text-purple-500 cursor-pointer flex items-center gap-4">
-        <div
-          onClick={() => dispatch(toggle())}
-          className="
-          transition-transform   ease-linear
-        duration-700 cursor-pointer
-        "
-        >
+        <div onClick={() => dispatch(toggle())} className="transition-transform ease-linear duration-700 cursor-pointer">
           {!open ? <Hamburger /> : <Cancel />}
         </div>
         POPCORE
       </div>
-
-      <div className="searchbar hidden border-none outline-none rounded-md py-1 h-8 px-4 w-96 bg-gray-100 md:flex items-center">
-        <Search />
-        <input
-          onChange={handleChange}
-          type="text"
-          value={query}
-          className="border-none outline-none rounded-md py-1 px-2 w-96 bg-gray-100"
-          placeholder="Search for Topics"
-        />
-        <button onClick={handleSearch} className="ml-2">Search</button>
-      </div>
-
       <div className="flex items-center gap-3">
         {dark ? <Light /> : <Dark />}
         <Logout />
@@ -117,3 +65,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
