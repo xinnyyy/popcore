@@ -8,7 +8,7 @@ import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-
+axios.defaults.withCredentials = true;
 const app = express();
 const express = require('express');
 const cors = require('cors');
