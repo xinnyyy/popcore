@@ -10,30 +10,21 @@ import { Server } from "socket.io";
 
 axios.defaults.withCredentials = true;
 const app = express();
-const express = require('express');
-const cors = require('cors');
-axios.defaults.withCredentials = true;
+const PORT = process.env.PORT || 8080;
 
-// Middleware for parsing JSON and urlencoded data
-const corsOptions = {
-  origin: 'https://popcore6436.vercel.app', // Your frontend URL
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // Allow credentials
-};
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
-// Database connection
-connectDB();
+app.use(express.json());
+app.use(
+  cors({
+    origin: "https://popcore6436.vercel.app/",
+    credentials: true,
+  })
+);
 
-// Routes
-
-// Default route
 app.get("/", (req, res) => {
   res.send("Hello World");
 });
 
-// Signup route
+// create a new user
 app.post("/signup", async (req, res) => {
   const { name, password, email, profileImage } = req.body;
   console.log("req.body", req.body);
@@ -49,7 +40,6 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Login route
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -66,7 +56,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Add question route
+// add question
 app.post("/ask-question", async (req, res) => {
   const { question, description, userId, tags } = req.body;
   try {
@@ -82,14 +72,15 @@ app.post("/ask-question", async (req, res) => {
   }
 });
 
-// Answer question route
 app.post("/answer/:id", async (req, res) => {
   const { answer, userId } = req.body;
+
   const { id: questionId } = req.params;
   try {
     const reply = await Reply.create({ reply: answer, author: userId });
     const findQuestion = await Question.findById(questionId);
-    await findQuestion.updateOne({
+    console.log("find", findQuestion);
+    const addReply = await findQuestion.updateOne({
       $push: { replies: reply._id },
     });
     return res.status(201).json(reply);
@@ -98,55 +89,7 @@ app.post("/answer/:id", async (req, res) => {
   }
 });
 
-// Upvote question route
-app.post("/upvote/:id", async (req, res) => {
-  const { id: questionId } = req.params;
-  const { userId } = req.body;
-  try {
-    const findQuestion = await Question.findById(questionId);
-    if (findQuestion.upvote.includes(userId)) {
-      return res.status(400).json({ message: "You have already upvoted" });
-    }
-    if (findQuestion.downvote.includes(userId)) {
-      await findQuestion.updateOne({
-        $pull: { downvote: userId },
-      });
-      return res.status(200).json({ message: "Response updated successfully" });
-    }
-    await findQuestion.updateOne({
-      $push: { upvote: userId },
-    });
-    return res.status(200).json({ message: "Upvoted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
-  }
-});
-
-// Downvote question route
-app.post("/downvote/:id", async (req, res) => {
-  const { id: questionId } = req.params;
-  const { userId } = req.body;
-  try {
-    const findQuestion = await Question.findById(questionId);
-    if (findQuestion.downvote.includes(userId)) {
-      return res.status(400).json({ message: "You have already downvoted" });
-    }
-    if (findQuestion.upvote.includes(userId)) {
-      await findQuestion.updateOne({
-        $pull: { upvote: userId },
-      });
-      return res.status(200).json({ message: "Response updated successfully" });
-    }
-    await findQuestion.updateOne({
-      $push: { downvote: userId },
-    });
-    return res.status(200).json({ message: "Downvoted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
-  }
-});
-
-// Get all questions route
+// general routes
 app.get("/questions", async (req, res) => {
   try {
     const questions = await Question.find({})
@@ -155,7 +98,7 @@ app.get("/questions", async (req, res) => {
         path: "replies",
         populate: {
           path: "author",
-          model: "User", // Adjust model name as per your schema
+          model: "DiscussionUser",
         },
       })
       .populate("author")
@@ -166,7 +109,56 @@ app.get("/questions", async (req, res) => {
   }
 });
 
-// Get all users route
+app.post("/upvote/:id", async (req, res) => {
+  const { id: questionId } = req.params;
+  const { userId } = req.body;
+  try {
+    const findQuestion = await Question.findById(questionId);
+    if (findQuestion.upvote.includes(userId)) {
+      return res.status(400).json({ message: "You have already upvoted" });
+    }
+
+    if (findQuestion.downvote.includes(userId)) {
+      const downvote = await findQuestion.updateOne({
+        $pull: { downvote: userId },
+      });
+      return res.status(200).json({ message: "Response updated successfully" });
+    }
+
+    const upvote = await findQuestion.updateOne({
+      $push: { upvote: userId },
+    });
+    return res.status(200).json(upvote);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
+app.post("/downvote/:id", async (req, res) => {
+  const { id: questionId } = req.params;
+  const { userId } = req.body;
+  try {
+    const findQuestion = await Question.findById(questionId);
+    if (findQuestion.downvote.includes(userId)) {
+      return res.status(400).json({ message: "You have already downvoted" });
+    }
+
+    if (findQuestion.upvote.includes(userId)) {
+      const upvote = await findQuestion.updateOne({
+        $pull: { upvote: userId },
+      });
+      return res.status(200).json({ message: "Response updated successfully" });
+    }
+
+    const downvote = await findQuestion.updateOne({
+      $push: { downvote: userId },
+    });
+    return res.status(200).json(downvote);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
 app.get("/allusers", async (req, res) => {
   try {
     const users = await User.find({});
@@ -176,7 +168,6 @@ app.get("/allusers", async (req, res) => {
   }
 });
 
-// Get questions by user ID route
 app.get("/my-questions/:id", async (req, res) => {
   const { id: userId } = req.params;
   try {
@@ -186,18 +177,19 @@ app.get("/my-questions/:id", async (req, res) => {
         path: "replies",
         populate: {
           path: "author",
-          model: "User", // Adjust model name as per your schema
+          model: "DiscussionUser",
         },
       })
       .populate("author")
-      .sort({ createdAt: -1 });
+      .sort({
+        createdAt: -1,
+      });
     return res.status(200).json(replies);
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
 });
 
-// Get questions by topic route
 app.get("/find/:topic", async (req, res) => {
   const { topic } = req.params;
   try {
@@ -211,7 +203,7 @@ app.get("/find/:topic", async (req, res) => {
         path: "replies",
         populate: {
           path: "author",
-          model: "User", // Adjust model name as per your schema
+          model: "DiscussionUser",
         },
       })
       .populate("author")
@@ -222,106 +214,67 @@ app.get("/find/:topic", async (req, res) => {
   }
 });
 
-// POST a new trivia question
-app.post('/triviaquestions', async (req, res) => {
-  const { question, answers, correctAnswer, topic } = req.body;
-  const newQuestion = new TriviaQuestion({
-    question,
-    answers,
-    correctAnswer,
-    topic
-  });
-
+const deleteUser = async () => {
   try {
-    const savedQuestion = await newQuestion.save();
-    res.status(201).json(savedQuestion);
-  } catch (err) {
-    res.status(400).json({ message: err.message });
-  }
-});
-
-app.get('/triviaquestions', async (req, res) => {
-  const { topic } = req.query;
-  try {
-    const questions = await TriviaQuestion.find({ topic });
-    res.json(questions);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
-
-// Search route
-app.get("/search", async (req, res) => {
-  const { query } = req.query;
-  try {
-    const questions = await Question.find({
-      $or: [
-        { question: { $regex: query, $options: "i" } },
-        { description: { $regex: query, $options: "i" } },
-        { tags: { $regex: query, $options: "i" } }
-      ]
-    })
-      .populate("replies")
-      .populate({
-        path: "replies",
-        populate: {
-          path: "author",
-          model: "User"
-        }
-      })
-      .populate("author")
-      .sort({ createdAt: -1 });
- 
-    return res.status(200).json(questions);
+    const deleteQuestion = await Question.deleteMany({});
+    const deleteReply = await Reply.deleteMany({});
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
   }
+};
+
+const server = app.listen(PORT, () => {
+  connectDB();
+  //deleteUser();
+  console.log(`Server running on port ${PORT}`);
 });
 
-// Socket.IO event handling
-const server = createServer(app);
 const io = new Server(server, {
-  cors: {  origin: ["http://localhost:3000", "https://popcore6436.vercel.app"],
-  methods: ["GET", "POST"],
-  credentials: true,
-}});
+  secure: true,
+  cors: {
+    origin: "https://popcore6436.vercel.app/",
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
 
-// Socket.IO event handling
 io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
+  console.log("socket connected");
+  const users = [];
 
-  socket.on("join-room", async ({ room, user }) => {
-    try {
-      const messages = await Message.find({ room }).populate("user", "name _id profileImage");
-      socket.join(room); // Join the room
-      socket.emit("receive-messages", messages); // Send existing messages to client
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-    }
+  for (let [id, socket] of io.of("/").sockets) {
+    if (socket.handshake.auth._id)
+      users.push({
+        ...socket.handshake.auth,
+        socketId: socket.handshake.auth._id,
+      });
+  }
+
+  console.log("users", users);
+  io.emit("user-connected", users);
+
+  socket.on("join-room", ({ room, user }) => {
+    users[user._id] = user;
+    socket.join(room);
+
+    // socket.broadcast.to(room).emit("user-connected", users);
   });
 
-  socket.on("send-message", async ({ message, room, user }) => {
-    try {
-      const newMessage = new Message({ message, room, user });
-      await newMessage.save();
-
-      // Broadcast the message to all clients in the room
-      const populatedMessage = await newMessage.populate("user", "name _id profileImage").execPopulate();
-      io.to(room).emit("receive-message", { message: populatedMessage.message, room: populatedMessage.room, user: populatedMessage.user });
-    } catch (error) {
-      console.error("Error saving message:", error);
-    }
+  socket.on("send-message", ({ message, room, user }) => {
+    console.log("message", message, room, user);
+    io.to(room).emit("receive-message", { message, user, room });
   });
 
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
+    console.log("disconnected");
+    const delUser = users.filter(
+      (user) => user.socketId !== socket.handshake.auth._id
+    );
+    console.log("disconnected users", delUser);
+    io.emit("user-disconnected", delUser);
   });
 });
 
-// Start server
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+export default app;
 
 
