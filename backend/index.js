@@ -10,6 +10,8 @@ import { Server } from "socket.io";
 
 
 const app = express();
+const express = require('express');
+const cors = require('cors');
 
 // Middleware for parsing JSON and urlencoded data
 app.use(express.json());
