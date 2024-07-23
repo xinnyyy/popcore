@@ -12,6 +12,7 @@ axios.defaults.withCredentials = true;
 const app = express();
 const express = require('express');
 const cors = require('cors');
+axios.defaults.withCredentials = true;
 
 // Middleware for parsing JSON and urlencoded data
 const corsOptions = {
