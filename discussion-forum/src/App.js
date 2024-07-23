@@ -148,10 +148,6 @@ const router = createBrowserRouter([
         element: <Myanswers />,
       },
       {
-        path: "/trivia",
-        element: <Trivia />,
-      },
-      {
         path: "*",
         element: <Notfound />,
       },
