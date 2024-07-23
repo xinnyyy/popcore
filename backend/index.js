@@ -17,11 +17,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS middleware
 app.use(cors({
-  origin: ["http://localhost:3000", "https://h-forum.vercel.app"],
-  methods: ["GET", "POST"],
-  credentials: true,
+  origin: 'https://popcore6436.vercel.app',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
 // Database connection
 connectDB();
 
