@@ -38,7 +38,7 @@ const Content = () => {
     md:gap-8 my-8 "
     >
       <Toaster />
-      {data.length > 0 &&
+      {data && data.length > 0 &&
         data.map((question, index) => {
           return (
             <div
