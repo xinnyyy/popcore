@@ -19,7 +19,7 @@ const io = new Server(server, {
   cors: {
     origin: [
       'http://localhost:3000',
-      'https://popcore6436.vercel.app'
+      'https://popcore6436-dtlxf24ze-xin-yis-projects-c76ad3e1.vercel.app'
     ],
     methods: ['GET', 'POST'],
     credentials: true
