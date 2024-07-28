@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import Arrowup from "../icons/Arrowup";
 import Arrowdown from "../icons/Arrowdown";
 import Comment from "../icons/Comment";
@@ -18,7 +18,7 @@ const Content = () => {
   const [openId, setOpenId] = React.useState([]);
   const [answer, setAnswer] = React.useState("");
 
-  const { isLoading, data } = useQuery("getAllQuestions", () => {
+  const { isLoading, error, data } = useQuery("getAllQuestions", () => {
     if (topic) {
       return newRequests
         .get(`${process.env.REACT_APP_BACKEND_URL}/find/${topic}`)
@@ -31,6 +31,7 @@ const Content = () => {
   });
 
   if (isLoading) return <Loading />;
+  if (error) return <div>Error fetching data: {error.message}</div>;
 
   return (
     <div
@@ -38,7 +39,7 @@ const Content = () => {
     md:gap-8 my-8 "
     >
       <Toaster />
-      {data && data.length > 0 &&
+      {data && data.length > 0 ? (
         data.map((question, index) => {
           return (
             <div
@@ -82,7 +83,6 @@ const Content = () => {
                     console.log("answer", answer);
                     return (
                       <div key={answer._id} className="flex items-center gap-4">
-                        {/* fix this */}
                         <img
                           className="h-4 md:h-6 w-4 md:w-6"
                           src="https://cdn.icon-icons.com/icons2/2596/PNG/512/nested_arrows_icon_155086.png"
@@ -98,7 +98,6 @@ const Content = () => {
                       </div>
                     );
                   })}
-                  {/* nested comment       */}
                   <div
                     className="w-full bg-white dark:bg-slate-900 flex items-center gap-4
        px-5 py-2 rounded-lg shadow-md  mt-2"
@@ -122,10 +121,13 @@ const Content = () => {
               )}
             </div>
           );
-        })}
-      {data.length === 0 && <NothingHere />}
+        })
+      ) : (
+        <NothingHere />
+      )}
     </div>
   );
 };
 
 export default Content;
+
