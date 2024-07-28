@@ -161,14 +161,15 @@ app.get('/questions', async (req, res) => {
         path: 'replies',
         populate: {
           path: 'author',
-          model: 'User' // Adjust model name as per your schema
+          model: 'User' // Ensure this is correct
         }
       })
       .populate('author')
       .sort({ createdAt: -1 });
     return res.status(200).json(questions);
   } catch (error) {
-    return res.status(500).json({ message: 'Server Error' });
+    console.error('Error fetching questions:', error);
+    return res.status(500).json({ message: 'Server Error', error: error.message });
   }
 });
 
