@@ -14,30 +14,36 @@ const app = express();
 // Create HTTP server
 const server = createServer(app);
 
-// Configure Socket.io with CORS
-const io = new Server(server, {
-  cors: {
-    origin: [
-      'http://localhost:3000',
-      'https://popcore6436-dtlxf24ze-xin-yis-projects-c76ad3e1.vercel.app'
-    ],
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
-});
-
 // Middleware for parsing JSON and urlencoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS configuration for Express
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://*.vercel.app', // Use a wildcard to allow all subdomains on vercel.app
+  // Add more allowed origins as needed
+];
+
 const corsOptions = {
-  origin: 'https://popcore6436.vercel.app', // Your frontend URL
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // Allow credentials
+  credentials: true
 };
+
 app.use(cors(corsOptions));
+
+// Configure Socket.io with CORS
+const io = new Server(server, {
+  cors: corsOptions
+});
 
 // Database connection
 connectDB();
@@ -249,8 +255,7 @@ app.get('/search', async (req, res) => {
     const questions = await Question.find({
       $or: [
         { question: { $regex: query, $options: 'i' } },
-        { description: { $regex: query, $options: 'i' } },
-        { tags: { $regex: query, $options: 'i' } }
+        { description: { $regex: query, $options: 'i' } }
       ]
     })
       .populate('replies')
@@ -258,7 +263,7 @@ app.get('/search', async (req, res) => {
         path: 'replies',
         populate: {
           path: 'author',
-          model: 'User'
+          model: 'User' // Adjust model name as per your schema
         }
       })
       .populate('author')
@@ -269,43 +274,15 @@ app.get('/search', async (req, res) => {
   }
 });
 
-// Socket.IO event handling
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
-
-  socket.on('join-room', async ({ room, user }) => {
-    try {
-      const messages = await Message.find({ room }).populate('user', 'name _id profileImage');
-      socket.join(room); // Join the room
-      socket.emit('receive-messages', messages); // Send existing messages to client
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  });
-
-  socket.on('send-message', async ({ message, room, user }) => {
-    try {
-      const newMessage = new Message({ message, room, user });
-      await newMessage.save();
-
-      // Broadcast the message to all clients in the room
-      const populatedMessage = await newMessage.populate('user', 'name _id profileImage').execPopulate();
-      io.to(room).emit('receive-message', { message: populatedMessage.message, room: populatedMessage.room, user: populatedMessage.user });
-    } catch (error) {
-      console.error('Error saving message:', error);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
-  });
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: 'Not Found' });
 });
 
-// Start the server
+// Starting server
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 
 
